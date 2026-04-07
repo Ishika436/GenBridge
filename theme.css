@@ -1,0 +1,30 @@
+:root {
+  /* Light theme colors */
+  --primary-bg: #ffffff;
+  --secondary-bg: #f4f4f4;
+  --primary-text: #000000;
+  --secondary-text: #555555;
+  --accent-color: #007bff;
+}
+
+[data-theme='dark'] {
+  /* Dark theme colors */
+  --primary-bg: #121212;
+  --secondary-bg: #1e1e1e;
+  --primary-text: #ffffff;
+  --secondary-text: #b0b0b0;
+  --accent-color: #007bff;
+}
+
+/* Example styling using the variables */
+body {
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+}
+h1, h2, h3 {
+  color: var(--secondary-text);
+}
+button {
+  background-color: var(--accent-color);
+  color: var(--primary-bg);
+}

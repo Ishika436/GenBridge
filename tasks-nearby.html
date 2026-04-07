@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks Nearby – GenBridge</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    .nearby-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    /* FILTERS SIDEBAR */
+    .filter-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .filter-card {
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow);
+    }
+
+    .filter-card h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.55rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.87rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      border: 1.5px solid transparent;
+    }
+
+    .filter-chip:hover, .filter-chip.active {
+      background: var(--blue-light);
+      color: var(--blue);
+      border-color: #c5d9f9;
+    }
+
+    /* TASKS GRID AREA */
+    .tasks-area h2 {
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .tasks-area > p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      background: var(--card-bg, #fff);
+    }
+
+    .search-bar input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47,128,237,0.12);
+    }
+
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .sort-bar span { font-size: 0.85rem; color: var(--text-muted); }
+
+    .sort-btn {
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg, #fff);
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .sort-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* EXPANDED TASK CARD */
+    .task-row {
+      background: var(--card-bg, #fff);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-row::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 5px; height: 100%;
+      background: linear-gradient(180deg, var(--blue), var(--green));
+      border-radius: 4px 0 0 4px;
+    }
+
+    .task-row:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--blue);
+    }
+
+    .task-row-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .task-row-title h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .task-row-title p {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 600px;
+    }
+
+    .task-pay-big {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--green);
+      white-space: nowrap;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .task-row-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .poster-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .poster-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue-light), #c5d9f9);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--blue-dark);
+    }
+
+    .no-tasks {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .no-tasks .no-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+    .accepted-notice {
+      background: var(--green-light);
+      border: 1.5px solid #a8e6c0;
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      font-size: 0.88rem;
+      color: #1a7a42;
+      font-weight: 600;
+    }
+
+    @media (max-width: 800px) {
+      .nearby-layout { grid-template-columns: 1fr; }
+    }
+    [data-theme="dark"] .map-container,
+    [data-theme="dark"] .tn-task-card,
+    [data-theme="dark"] .empty-state,
+    [data-theme="dark"] .filter-sidebar {
+      background: var(--card-bg);
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="page-hero">
+    <div class="container">
+      <h1>Tasks Near You</h1>
+      <p>Browse tasks posted by seniors in your area and start helping!</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="nearby-layout">
+      <!-- FILTER SIDEBAR -->
+      <aside class="filter-sidebar">
+        <div class="filter-card fade-in">
+          <h4>📂 Category</h4>
+          <div class="filter-chips">
+            <div class="filter-chip active" data-cat="all" onclick="setFilter(this,'cat')">🌐 All Categories</div>
+            <div class="filter-chip" data-cat="Shopping" onclick="setFilter(this,'cat')">Shopping</div>
+            <div class="filter-chip" data-cat="Tech Help" onclick="setFilter(this,'cat')">Tech Help</div>
+            <div class="filter-chip" data-cat="Errands" onclick="setFilter(this,'cat')">Errands</div>
+            <div class="filter-chip" data-cat="Household" onclick="setFilter(this,'cat')">Household</div>
+            <div class="filter-chip" data-cat="Medical" onclick="setFilter(this,'cat')">Medical</div>
+            <div class="filter-chip" data-cat="Companionship" onclick="setFilter(this,'cat')">Companionship</div>
+          </div>
+        </div>
+
+        <div class="filter-card fade-in fade-in-2">
+          <h4>⚡ Status</h4>
+          <div class="filter-chips">
+            <div class="filter-chip active" data-status="open" onclick="setFilter(this,'status')">Open Tasks</div>
+            <div class="filter-chip" data-status="all" onclick="setFilter(this,'status')">All Tasks</div>
+          </div>
+        </div>
+
+        <div class="filter-card fade-in fade-in-3">
+          <h4>Urgency</h4>
+          <div class="filter-chips">
+            <div class="filter-chip active" data-urgent="all" onclick="setFilter(this,'urgent')">🌐 All</div>
+            <div class="filter-chip" data-urgent="urgent" onclick="setFilter(this,'urgent')">Urgent Only</div>
+          </div>
+        </div>
+
+        <div class="card fade-in fade-in-4" style="background:linear-gradient(135deg,#e8f7ee,#eaf4ff);border-color:#c5d9f9;">
+          <h4 style="font-size:0.95rem;margin-bottom:0.5rem;">How it works</h4>
+          <p style="font-size:0.83rem;color:var(--text-muted);line-height:1.6;">Click <strong>Accept Task</strong> on any open task. The senior will be notified. Complete the task to earn payment.</p>
+        </div>
+      </aside>
+
+      <!-- TASKS AREA -->
+      <div class="tasks-area">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:0.3rem;">
+          <h2 id="tasks-heading" style="margin:0;">Open Tasks Near You</h2>
+          <button class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.8rem;" id="btn-helper-gps" onclick="enableHelperGPS(this)">📍 Find tasks near my GPS</button>
+        </div>
+        <p id="tasks-count">Loading tasks…</p>
+
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="🔍 Search tasks by title, location…" oninput="renderTasks()"/>
+        </div>
+
+        <div class="sort-bar">
+          <span>Sort by:</span>
+          <button class="sort-btn active" onclick="setSort(this,'newest')">Newest</button>
+          <button class="sort-btn" onclick="setSort(this,'urgent')">Urgent First</button>
+          <button class="sort-btn" onclick="setSort(this,'pay')">Highest Pay</button>
+        </div>
+
+        <div class="tasks-list" id="tasks-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCEPT CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="accept-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Accept Task?</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modal-task-info" style="margin-bottom:1.5rem;"></div>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">By accepting, you commit to completing this task. The senior will be notified and can contact you.</p>
+      <div style="display:flex;gap:1rem;">
+        <button class="btn btn-green" style="flex:1;justify-content:center;" onclick="confirmAccept()">Yes, Accept Task</button>
+        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const user = Auth.requireAuth();
+    if (!user) throw new Error('No user');
+    seedDemoTasks();
+    document.getElementById('navbar-mount').innerHTML = renderNavbar('nearby');
+
+    let filters = { cat: 'all', status: 'open', urgent: 'all' };
+    let currentSort = 'newest';
+    let pendingAcceptId = null;
+    let helperLat = null;
+    let helperLng = null;
+
+    function enableHelperGPS(btn) {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+      btn.innerHTML = 'Locating...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          helperLat = pos.coords.latitude;
+          helperLng = pos.coords.longitude;
+          btn.innerHTML = '✓ Showing nearest tasks (10km)';
+          btn.style.borderColor = 'var(--green)';
+          btn.style.color = 'var(--green)';
+          btn.style.background = 'var(--green-light)';
+          renderTasks();
+        },
+        (err) => {
+          btn.innerHTML = 'GPS Failed. Use text search below.';
+          console.error(err);
+        }
+      );
+    }
+
+    function setFilter(el, type) {
+      document.querySelectorAll(`[data-${type}]`).forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      filters[type] = el.dataset[type] || el.dataset.cat || el.dataset.status || el.dataset.urgent;
+      renderTasks();
+    }
+
+    function setSort(el, sort) {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      currentSort = sort;
+      renderTasks();
+    }
+
+    function parsePay(pay) {
+      return parseInt((pay || '0').replace(/[^\d]/g, '')) || 0;
+    }
+
+    function renderTasks() {
+      let tasks = Tasks.getAll();
+      const search = document.getElementById('search-input').value.toLowerCase();
+
+      // Pre-calculate distances if GPS is enabled
+      if (helperLat && helperLng) {
+        tasks.forEach(t => {
+          if (t.lat && t.lng) {
+            t.distance = calculateDistance(helperLat, helperLng, parseFloat(t.lat), parseFloat(t.lng));
+          } else {
+            t.distance = null;
+          }
+        });
+      }
+
+      // Apply filters
+      if (filters.cat !== 'all') tasks = tasks.filter(t => t.category === filters.cat);
+      if (filters.status === 'open') tasks = tasks.filter(t => t.status === 'open');
+      if (filters.urgent === 'urgent') tasks = tasks.filter(t => t.urgent);
+      if (search) tasks = tasks.filter(t =>
+        t.title.toLowerCase().includes(search) ||
+        t.location.toLowerCase().includes(search) ||
+        (t.description||'').toLowerCase().includes(search)
+      );
+
+      // Apply GPS filter (10km radius) ONLY if user enabled GPS
+      if (helperLat && helperLng) {
+        tasks = tasks.filter(t => t.distance !== null && t.distance <= 10);
+      }
+
+      // Sort
+      if (currentSort === 'newest') tasks.sort((a,b) => b.id - a.id);
+      else if (currentSort === 'urgent') tasks.sort((a,b) => (b.urgent?1:0) - (a.urgent?1:0));
+      else if (currentSort === 'pay') tasks.sort((a,b) => parsePay(b.pay) - parsePay(a.pay));
+
+      const count = document.getElementById('tasks-count');
+      count.textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''} found`;
+
+      const list = document.getElementById('tasks-list');
+      if (tasks.length === 0) {
+        list.innerHTML = `<div class="no-tasks"><div class="no-icon">🔍</div><p>No tasks found matching your filters.<br>Try adjusting your search or filters.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = tasks.map((t, i) => {
+        const initials = t.postedBy.split(' ').map(n=>n[0]).join('').slice(0,2);
+        const accepted = t.status !== 'open';
+        const myAccepted = t.acceptedById === user.id;
+        const timeAgo = getTimeAgo(t.createdAt);
+
+        const postedByUser = Users.findById ? Users.findById(t.postedById) : null;
+        const posterPhoto = postedByUser ? postedByUser.photo : null;
+
+        return `<div class="task-row fade-in" style="animation-delay:${i*0.05}s">
+          <div class="task-row-header">
+            <div class="task-row-title">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+                <span class="badge badge-blue">${t.category}</span>
+                ${t.urgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
+                ${accepted ? `<span class="badge badge-green">${t.status === 'completed' ? 'Completed' : '🟡 Accepted'}</span>` : ''}
+              </div>
+              <h3 class="translate-text">${t.title}</h3>
+              <p class="translate-text">${t.description || '—'}</p>
+            </div>
+            <div style="text-align:right;">
+              <div class="task-pay-big">${t.pay}</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">payment</div>
+            </div>
+          </div>
+          <div class="task-row-footer">
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+              <div class="poster-info">
+                ${posterPhoto
+                  ? `<img src="${posterPhoto}" alt="${t.postedBy}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"/>`
+                  : `<div class="poster-avatar">${initials}</div>`
+                }
+                <div>
+                  <span style="font-size:0.85rem;font-weight:600;">${t.postedBy}</span>
+                  ${posterPhoto ? `<div style="font-size:0.72rem;color:var(--green);font-weight:600;">✓ Verified</div>` : ''}
+                </div>
+              </div>
+              <span style="font-size:0.83rem;color:var(--text-muted);">${t.lat && t.lng ? `<a href="https://www.google.com/maps?q=${t.lat},${t.lng}" target="_blank" title="View Map" style="color:var(--blue);text-decoration:none;font-weight:600;">📍 ${t.location}</a>` : t.location}</span>
+              ${t.distance !== undefined && t.distance !== null ? `<span style="font-size:0.83rem;color:var(--blue);font-weight:600;background:var(--blue-light);padding:2px 8px;border-radius:20px;">${t.distance.toFixed(1)} km away</span>` : ''}
+              <span style="font-size:0.83rem;color:var(--text-muted);">🕐 ${timeAgo}</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              ${!accepted
+                ? `<button class="btn btn-green" onclick="openAcceptModal(${t.id})" style="padding:0.5rem 1.2rem;font-size:0.9rem;">Accept Task →</button>`
+                : myAccepted
+                  ? `<div class="accepted-notice">You accepted this</div>`
+                  : `<span class="badge badge-green">Taken</span>`
+              }
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function getTimeAgo(iso) {
+      if (!iso) return 'recently';
+      const diff = Date.now() - new Date(iso).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return 'just now';
+      if (m < 60) return `${m}m ago`;
+      const h = Math.floor(m/60);
+      if (h < 24) return `${h}h ago`;
+      return `${Math.floor(h/24)}d ago`;
+    }
+
+    function openAcceptModal(id) {
+      if (user.role !== 'helper') {
+        alert('Only helpers can accept tasks. You are registered as a task seeker.');
+        return;
+      }
+      pendingAcceptId = id;
+      const task = Tasks.getAll().find(t => t.id === id);
+      const posterUser = Users.findById ? Users.findById(task.postedById) : null;
+      const posterPhoto = posterUser ? posterUser.photo : null;
+      const posterInitials = task.postedBy.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('modal-task-info').innerHTML = `
+        <div class="task-card" style="pointer-events:none;margin:0;">
+          <span class="badge badge-blue">${task.category}</span>
+          <h3 style="margin-top:0.5rem;font-family:'DM Sans';font-size:1rem;">${task.title}</h3>
+          <div class="task-meta">
+            <span>${task.lat && task.lng ? `<a href="https://www.google.com/maps?q=${task.lat},${task.lng}" target="_blank" title="View Map" style="color:var(--blue);text-decoration:none;font-weight:600;">📍 ${task.location}</a>` : task.location}</span>
+            <span>${task.pay}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:0.6rem;">
+            ${posterPhoto
+              ? `<img src="${posterPhoto}" alt="${task.postedBy}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"/>`
+              : `<div style="width:28px;height:28px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:var(--blue-dark);">${posterInitials}</div>`
+            }
+            <span style="font-size:0.85rem;font-weight:600;">${task.postedBy}</span>
+            ${posterPhoto ? `<span style="font-size:0.75rem;color:var(--green);font-weight:700;">✓ Verified</span>` : ''}
+          </div>
+        </div>`;
+      document.getElementById('accept-modal').classList.add('active');
+    }
+
+    function confirmAccept() {
+      if (!pendingAcceptId) return;
+      Tasks.updateStatus(pendingAcceptId, 'accepted');
+      closeModal();
+      renderTasks();
+
+      // Show quick toast
+      const toast = document.createElement('div');
+      toast.textContent = 'Task accepted! Go to My Helps to track it.';
+      toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#27AE60;color:#fff;padding:1rem 1.5rem;border-radius:12px;font-weight:600;font-size:0.9rem;z-index:999;box-shadow:0 8px 24px rgba(39,174,96,0.3);animation:fadeIn 0.3s ease';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    function closeModal() {
+      document.getElementById('accept-modal').classList.remove('active');
+      pendingAcceptId = null;
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>

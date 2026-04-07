@@ -1,0 +1,96 @@
+<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sunGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FDB913;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:0.8" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <g id="sun-rays" fill="#FDB913">
+    <circle cx="400" cy="240" r="8"/>
+    <rect x="385" y="140" width="30" height="90" rx="15" fill="#FDB913"/>
+    <rect x="460" y="170" width="30" height="90" rx="15" fill="#FDB913" transform="rotate(45 475 215)"/>
+    <rect x="520" y="230" width="30" height="90" rx="15" fill="#FDB913" transform="rotate(90 535 275)"/>
+    <rect x="280" y="170" width="30" height="90" rx="15" fill="#FDB913" transform="rotate(-45 295 215)"/>
+    <rect x="220" y="230" width="30" height="90" rx="15" fill="#FDB913" transform="rotate(-90 235 275)"/>
+  </g>
+  <circle cx="400" cy="240" r="45" fill="url(#sunGradient)"/>
+  <g id="birds" fill="#1E5BA8">
+    <path d="M 280 220 Q 285 210 290 220 Q 285 225 280 220" fill="#1E5BA8"/>
+    <path d="M 510 220 Q 515 210 520 220 Q 515 225 510 220" fill="#1E5BA8"/>
+  </g>
+  <path d="M 180 380 Q 180 280 400 280 Q 620 280 620 380" stroke="#1E5BA8" stroke-width="40" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#FFFFFF" stroke-width="7" fill="none">
+    <line x1="220" y1="350" x2="220" y2="365"/>
+    <line x1="260" y1="320" x2="260" y2="335"/>
+    <line x1="300" y1="300" x2="300" y2="315"/>
+    <line x1="340" y1="290" x2="340" y2="305"/>
+    <line x1="380" y1="285" x2="380" y2="300"/>
+    <line x1="420" y1="285" x2="420" y2="300"/>
+    <line x1="460" y1="290" x2="460" y2="305"/>
+    <line x1="500" y1="300" x2="500" y2="315"/>
+    <line x1="540" y1="320" x2="540" y2="335"/>
+    <line x1="580" y1="350" x2="580" y2="365"/>
+  </g>
+  <g id="left-leaves">
+    <ellipse cx="140" cy="420" rx="22" ry="38" fill="#27AE60" transform="rotate(-35 140 420)"/>
+    <ellipse cx="115" cy="400" rx="16" ry="32" fill="#2E8B57" transform="rotate(-55 115 400)"/>
+    <ellipse cx="165" cy="450" rx="16" ry="32" fill="#2E8B57" transform="rotate(-15 165 450)"/>
+    <ellipse cx="160" cy="380" rx="14" ry="28" fill="#229954" transform="rotate(-70 160 380)"/>
+  </g>
+  <g id="right-leaves">
+    <ellipse cx="660" cy="420" rx="22" ry="38" fill="#27AE60" transform="rotate(35 660 420)"/>
+    <ellipse cx="685" cy="400" rx="16" ry="32" fill="#2E8B57" transform="rotate(55 685 400)"/>
+    <ellipse cx="635" cy="450" rx="16" ry="32" fill="#2E8B57" transform="rotate(15 635 450)"/>
+    <ellipse cx="640" cy="380" rx="14" ry="28" fill="#229954" transform="rotate(70 640 380)"/>
+  </g>
+  <g id="elderly-woman" filter="url(#shadow)">
+    <circle cx="270" cy="350" r="38" fill="#E8D4C0"/>
+    <path d="M 235 330 Q 270 305 305 330 L 305 360 Q 270 370 235 360 Z" fill="#E8E8E8" stroke="#D0D0D0" stroke-width="2"/>
+    <ellipse cx="270" cy="320" rx="38" ry="22" fill="#E8E8E8"/>
+    <circle cx="250" cy="345" r="14" fill="none" stroke="#333" stroke-width="2.5"/>
+    <circle cx="290" cy="345" r="14" fill="none" stroke="#333" stroke-width="2.5"/>
+    <line x1="264" y1="345" x2="276" y2="345" stroke="#333" stroke-width="2.5"/>
+    <line x1="240" y1="340" x2="235" y2="338" stroke="#333" stroke-width="1.5"/>
+    <circle cx="250" cy="345" r="3.5" fill="#000"/>
+    <circle cx="290" cy="345" r="3.5" fill="#000"/>
+    <line x1="270" y1="345" x2="270" y2="360" stroke="#D4A574" stroke-width="1.5"/>
+    <path d="M 255 365 Q 270 372 285 365" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+    <rect x="260" y="380" width="20" height="12" fill="#E8D4C0"/>
+    <ellipse cx="270" cy="425" rx="36" ry="50" fill="#2E5C8A"/>
+    <ellipse cx="270" cy="430" rx="38" ry="48" fill="#3B6FAA"/>
+    <path d="M 250 385 L 240 395 L 240 405 L 270 395 L 300 405 L 300 395 L 290 385" fill="#2E5C8A"/>
+    <ellipse cx="235" cy="415" rx="18" ry="42" fill="#E8D4C0" transform="rotate(-35 235 415)"/>
+    <ellipse cx="315" cy="435" rx="18" ry="42" fill="#E8D4C0" transform="rotate(25 315 435)"/>
+    <circle cx="215" cy="450" r="16" fill="#E8D4C0"/>
+    <circle cx="340" cy="465" r="16" fill="#E8D4C0"/>
+  </g>
+  <g id="young-man" filter="url(#shadow)">
+    <circle cx="530" cy="350" r="38" fill="#D4A574"/>
+    <ellipse cx="530" cy="310" rx="42" ry="28" fill="#3D2817"/>
+    <path d="M 495 330 Q 530 310 565 330 L 565 360 Q 530 370 495 360 Z" fill="#3D2817"/>
+    <circle cx="510" cy="345" r="3.5" fill="#000"/>
+    <circle cx="550" cy="345" r="3.5" fill="#000"/>
+    <path d="M 505 335 Q 510 332 515 335" fill="none" stroke="#3D2817" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M 545 335 Q 550 332 555 335" fill="none" stroke="#3D2817" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="530" y1="345" x2="530" y2="360" stroke="#C49A6C" stroke-width="1.5"/>
+    <path d="M 515 365 Q 530 372 545 365" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+    <rect x="520" y="380" width="20" height="12" fill="#D4A574"/>
+    <ellipse cx="530" cy="425" rx="36" ry="50" fill="#27AE60"/>
+    <ellipse cx="530" cy="430" rx="38" ry="48" fill="#2E9A5D"/>
+    <path d="M 510 385 L 500 395 L 500 405 L 530 395 L 560 405 L 560 395 L 550 385" fill="#27AE60"/>
+    <ellipse cx="495" cy="435" rx="18" ry="42" fill="#D4A574" transform="rotate(-25 495 435)"/>
+    <ellipse cx="565" cy="415" rx="18" ry="42" fill="#D4A574" transform="rotate(35 565 415)"/>
+    <circle cx="460" cy="465" r="16" fill="#D4A574"/>
+    <circle cx="585" cy="450" r="16" fill="#D4A574"/>
+  </g>
+  <g id="handshake">
+    <path d="M 340 465 Q 400 470 460 465" stroke="#D4A574" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <circle cx="400" cy="470" r="12" fill="#FFD700" stroke="#FDB913" stroke-width="2"/>
+    <circle cx="400" cy="465" r="8" fill="#FFE55C"/>
+  </g>
+  <text x="150" y="600" font-family="'Arial Black', Arial, sans-serif" font-size="130" font-weight="900" fill="#1E5BA8" letter-spacing="2">Gen</text>
+  <text x="420" y="600" font-family="'Arial Black', Arial, sans-serif" font-size="130" font-weight="900" fill="#27AE60" letter-spacing="2">Bridge</text>
+</svg>

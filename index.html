@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenBridge – Connecting Generations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e8f1fd 0%, #f0f9f3 60%, #eaf4ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Language bar at top */
+    .top-lang-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .auth-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 1000px;
+      width: 100%;
+      background: var(--card-bg, #fff);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(47, 128, 237, 0.18);
+      min-height: 600px;
+    }
+
+    .auth-left {
+      background: linear-gradient(155deg, #1a5fc8 0%, #2F80ED 50%, #27AE60 100%);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 260px;
+      height: 260px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+    }
+
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      left: -60px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 50%;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .auth-logo-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .auth-hero-text {
+      z-index: 1;
+    }
+
+    .auth-hero-text h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 1rem;
+    }
+
+    .auth-hero-text p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .feature-pills {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1;
+    }
+
+    .feature-pill {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      width: fit-content;
+    }
+
+    .auth-right {
+      padding: 2rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--white);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 1.4rem;
+      gap: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: none;
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--card-bg, #fff);
+      color: var(--blue);
+      box-shadow: 0 2px 8px rgba(47, 128, 237, 0.15);
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .auth-form h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .auth-form>p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .role-option {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-option:hover,
+    .role-option.selected {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .role-option .role-icon {
+      font-size: 1.5rem;
+      margin-bottom: 3px;
+    }
+
+    .role-option .role-label {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .role-option .role-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Photo upload */
+    .photo-upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 1.2rem;
+      text-align: center;
+      background: var(--white);
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .photo-upload-zone:hover {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .photo-upload-zone.has-photo {
+      border-color: var(--green);
+      background: var(--green-light);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .photo-preview-wrap {
+      position: relative;
+      width: 100%;
+      display: none;
+    }
+
+    .photo-preview-wrap img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 14px;
+      display: block;
+    }
+
+    .photo-preview-wrap .photo-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-upload-placeholder {
+      padding: 1rem 0.5rem;
+    }
+
+    .photo-upload-placeholder .up-icon {
+      font-size: 2rem;
+      margin-bottom: 6px;
+    }
+
+    .photo-upload-placeholder p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .photo-upload-placeholder strong {
+      font-size: 0.88rem;
+      color: var(--text);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .photo-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      justify-content: center;
+    }
+
+    .photo-btn {
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg, #fff);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .photo-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .photo-btn.primary {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .photo-btn.primary:hover {
+      background: var(--blue-dark);
+    }
+
+    .camera-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .camera-modal-overlay.active {
+      display: flex;
+    }
+
+    #camera-video {
+      border-radius: 16px;
+      max-width: 340px;
+      width: 100%;
+      background: #000;
+    }
+
+    #camera-canvas {
+      display: none;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .cam-btn {
+      padding: 0.7rem 1.5rem;
+      border-radius: 50px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cam-snap {
+      background: var(--card-bg, #fff);
+      color: #1a2340;
+    }
+
+    .cam-close {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .cam-snap:hover {
+      background: #e8f1fd;
+    }
+
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-light);
+      color: #1a7a42;
+      border-radius: 50px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .auth-wrapper {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-left {
+        display: none;
+      }
+
+      .auth-right {
+        padding: 1.5rem;
+      }
+    }
+
+    [data-theme="dark"] .auth-tab.active,
+    [data-theme="dark"] .photo-upload-zone,
+    [data-theme="dark"] .gender-option,
+    [data-theme="dark"] .photo-btn {
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+
+    [data-theme="dark"] .auth-left {
+      background: var(--auth-bg);
+    }
+
+    [data-theme="dark"] .role-option,
+    [data-theme="dark"] .lang-switcher {
+      background: var(--card-bg);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- TOP LANGUAGE BAR -->
+  <div class="top-lang-bar fade-in">
+    <span>🌐 Language:</span>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon"></span>
+    </button>
+    <div class="lang-switcher" style="border-color:#dde4f0;">
+      <button class="lang-btn" id="lbtn-en" onclick="setLang('en')" title="English">EN</button>
+      <button class="lang-btn" id="lbtn-hi" onclick="setLang('hi')" title="हिंदी">हि</button>
+      <button class="lang-btn" id="lbtn-mr" onclick="setLang('mr')" title="मराठी">म</button>
+    </div>
+  </div>
+
+  <div class="auth-wrapper fade-in">
+    <!-- LEFT -->
+    <div class="auth-left">
+      <div class="auth-logo">
+        <div class="auth-logo-icon"></div>GenBridge
+      </div>
+      <div class="auth-hero-text">
+        <h2 id="left-title">Connecting Seniors with Caring Helpers</h2>
+        <p id="left-sub">A safe, simple platform where elderly individuals get the help they need, and young people earn
+          while making a real difference.</p>
+      </div>
+      <div class="feature-pills">
+        <div class="feature-pill" id="feat-1">Photo Verified Accounts</div>
+        <div class="feature-pill" id="feat-2">Location-Based Matching</div>
+        <div class="feature-pill" id="feat-3">Secure In-App Messaging</div>
+        <div class="feature-pill" id="feat-4">Intergenerational Bonding</div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="auth-right">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <div class="auth-form active" id="signin-form">
+        <h3 id="si-title">Welcome back </h3>
+        <p id="si-sub">Sign in to continue to your GenBridge account</p>
+        <div class="alert alert-error" id="signin-error"></div>
+        <div class="form-group"
+          style="display:flex; gap:8px; margin-bottom:1.5rem; background:var(--input-bg); padding:6px; border-radius:var(--radius-sm); border:1.5px solid var(--border);">
+          <button type="button" id="si-method-email"
+            style="flex:1; border:none; background:var(--blue); color:#fff; padding:8px; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; font-family:'DM Sans',sans-serif;"
+            onclick="setSignInMethod('email')">Email</button>
+          <button type="button" id="si-method-phone"
+            style="flex:1; border:none; background:transparent; color:var(--text); padding:8px; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; font-family:'DM Sans',sans-serif;"
+            onclick="setSignInMethod('phone')">Mobile & OTP</button>
+        </div>
+
+        <div id="si-email-section">
+          <div class="form-group">
+            <label id="si-email-lbl">Email Address</label>
+            <input type="email" id="signin-email" placeholder="you@email.com" />
+          </div>
+          <div class="form-group">
+            <label id="si-pass-lbl">Password</label>
+            <input type="password" id="signin-password" placeholder="Enter your password" />
+          </div>
+        </div>
+
+        <div id="si-phone-section" style="display:none;">
+          <div class="form-group">
+            <label id="si-phone-lbl">Mobile Number</label>
+            <div style="display:flex;gap:8px;">
+              <input type="tel" id="signin-phone" placeholder="10-digit mobile number" style="flex:1;" />
+              <button type="button" class="btn btn-outline" id="btn-send-otp" onclick="sendOTP(event)"
+                style="padding:0.6rem 1rem;">Send OTP</button>
+            </div>
+          </div>
+          <div class="form-group" id="si-otp-group" style="display:none;">
+            <label id="si-otp-lbl">Enter OTP</label>
+            <input type="text" id="signin-otp" placeholder="Enter 1234 for demo" maxlength="4" />
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.4rem;"
+          onclick="handleSignin()" id="si-btn">Sign In →</button>
+        <p style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--text-muted);">
+          <span id="si-no-account">No account?</span> <a onclick="switchTab('signup')"
+            style="color:var(--blue);cursor:pointer;font-weight:600;" id="si-create-link">Create one free</a>
+        </p>
+      </div>
+
+      <!-- SIGN UP -->
+      <div class="auth-form" id="signup-form">
+        <h3 id="su-title">Create Your Account</h3>
+        <p id="su-sub">Join GenBridge and start connecting</p>
+        <div class="alert alert-error" id="signup-error"></div>
+
+        <!-- Role -->
+        <div class="form-group">
+          <label id="su-role-lbl">I am a…</label>
+          <div class="role-selector">
+            <div class="role-option selected" id="role-seeker" onclick="selectRole('seeker')">
+              <div class="role-icon"></div>
+              <div class="role-label" id="su-seeker-label">I Need Help</div>
+              <div class="role-sub" id="su-seeker-sub">Senior seeking assistance</div>
+            </div>
+            <div class="role-option" id="role-helper" onclick="selectRole('helper')">
+              <div class="role-icon"></div>
+              <div class="role-label" id="su-helper-label">I Want to Help</div>
+              <div class="role-sub" id="su-helper-sub">Youth helper / volunteer</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gender -->
+        <div class="form-group">
+          <label id="su-gender-lbl">Gender</label>
+          <div class="gender-selector">
+            <div class="gender-option selected" id="gender-male" onclick="selectGender('male')">
+              <span class="g-icon"></span>
+              <span id="g-male-lbl">Male</span>
+            </div>
+            <div class="gender-option" id="gender-female" onclick="selectGender('female')">
+              <span class="g-icon"></span>
+              <span id="g-female-lbl">Female</span>
+            </div>
+            <div class="gender-option" id="gender-other" onclick="selectGender('other')">
+              <span class="g-icon"></span>
+              <span id="g-other-lbl">Other</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="su-name-lbl">Full Name</label>
+          <input type="text" id="signup-name" placeholder="Your full name" />
+        </div>
+        <div class="form-group">
+          <label id="su-email-lbl">Email Address</label>
+          <input type="email" id="signup-email" placeholder="you@email.com" />
+        </div>
+        <div class="form-group">
+          <label id="su-phone-lbl">Mobile Number</label>
+          <input type="tel" id="signup-phone" placeholder="10-digit mobile number" />
+        </div>
+        <div class="form-group">
+          <label id="su-id-lbl">Govt. ID Number</label>
+          <input type="text" id="signup-id" placeholder="Aadhar / PAN / Voter ID" />
+        </div>
+        <div class="form-group">
+          <label id="su-pass-lbl">Password</label>
+          <input type="password" id="signup-password" placeholder="Min. 6 characters" />
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="form-group">
+          <label id="su-photo-lbl">Verification Photo</label>
+          <div class="photo-upload-zone" id="photo-zone" onclick="triggerFileInput()">
+            <div id="photo-placeholder" class="photo-upload-placeholder">
+              <div class="up-icon">📸</div>
+              <strong id="photo-strong-lbl">Add your photo</strong>
+              <p id="photo-sub-lbl">Builds trust with helpers</p>
+            </div>
+            <div class="photo-preview-wrap" id="photo-preview-wrap">
+              <img id="photo-preview-img" src="" alt="Preview" />
+              <button class="photo-remove" onclick="removePhoto(event)" title="Remove photo">✕</button>
+            </div>
+            <div class="photo-btns" id="photo-btns">
+              <button class="photo-btn" onclick="openCamera(event)" id="photo-cam-btn">Take Photo</button>
+              <button class="photo-btn primary" onclick="triggerFileInput(event)" id="photo-upload-btn">Upload
+                Photo</button>
+            </div>
+          </div>
+          <div id="photo-verified-badge" style="display:none;" class="verified-badge" id="photo-verified-lbl">Photo
+            added – you'll be verified!</div>
+          <input type="file" id="photo-file-input" accept="image/*" style="display:none;"
+            onchange="handleFileSelect(event)" />
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="handleSignup()"
+          id="su-btn">Create Account →</button>
+        <p style="text-align:center;margin-top:0.8rem;font-size:0.85rem;color:var(--text-muted);">
+          <span id="su-have-account">Have an account?</span> <a onclick="switchTab('signin')"
+            style="color:var(--blue);cursor:pointer;font-weight:600;" id="su-signin-link">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA MODAL -->
+  <div class="camera-modal-overlay" id="camera-modal">
+    <video id="camera-video" autoplay playsinline></video>
+    <canvas id="camera-canvas"></canvas>
+    <div class="camera-controls">
+      <button class="cam-btn cam-snap" onclick="snapPhoto()">📸 Take Photo</button>
+      <button class="cam-btn cam-close" onclick="closeCamera()">✕ Cancel</button>
+    </div>
+    <p style="color:rgba(255,255,255,0.6);font-size:0.82rem;">Position your face clearly in frame</p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (Auth.getUser()) window.location.href = 'dashboard.html';
+    seedDemoTasks();
+
+    // Apply language to page labels
+    function applyLang() {
+      const lang = getLang();
+      // Highlight active lang button
+      ['en', 'hi', 'mr'].forEach(l => {
+        const btn = document.getElementById('lbtn-' + l);
+        if (btn) btn.classList.toggle('active', lang === l);
+      });
+      // Left Hero Auth
+      document.getElementById('left-title').textContent = t('left_title');
+      document.getElementById('left-sub').textContent = t('left_sub');
+      document.getElementById('feat-1').textContent = '📸 ' + t('feat_1');
+      document.getElementById('feat-2').textContent = t('feat_2');
+      document.getElementById('feat-3').textContent = '💬 ' + t('feat_3');
+      document.getElementById('feat-4').textContent = t('feat_4');
+      // Sign in form
+      document.getElementById('si-title').textContent = t('welcome_back');
+      document.getElementById('si-sub').textContent = t('signin_sub');
+      document.getElementById('si-email-lbl').textContent = t('email_label');
+      document.getElementById('si-pass-lbl').textContent = t('password_label');
+      document.getElementById('si-btn').textContent = t('signin_btn');
+      document.getElementById('si-no-account').textContent = t('no_account');
+      document.getElementById('si-create-link').textContent = t('create_free');
+      // Sign up form
+      document.getElementById('su-title').textContent = t('create_account_title');
+      document.getElementById('su-sub').textContent = t('signup_sub');
+      document.getElementById('su-name-lbl').textContent = t('full_name');
+      document.getElementById('su-email-lbl').textContent = t('email_label');
+      document.getElementById('su-id-lbl').textContent = t('govt_id');
+      document.getElementById('su-pass-lbl').textContent = t('password_label');
+      document.getElementById('su-gender-lbl').textContent = t('gender_label');
+      document.getElementById('g-male-lbl').textContent = t('gender_male');
+      document.getElementById('g-female-lbl').textContent = t('gender_female');
+      document.getElementById('g-other-lbl').textContent = t('gender_other');
+      document.getElementById('su-seeker-label').textContent = t('role_seeker').replace(/\s?/, '');
+      document.getElementById('su-seeker-sub').textContent = t('role_seeker_sub');
+      document.getElementById('su-helper-label').textContent = t('role_helper').replace(/\s?/, '');
+      document.getElementById('su-helper-sub').textContent = t('role_helper_sub');
+      document.getElementById('su-photo-lbl').textContent = t('photo_title');
+      document.getElementById('photo-strong-lbl').textContent = t('photo_strong');
+      document.getElementById('photo-sub-lbl').textContent = t('photo_sub');
+      document.getElementById('photo-cam-btn').innerHTML = t('take_photo');
+      document.getElementById('photo-upload-btn').innerHTML = t('upload_photo');
+      document.getElementById('photo-verified-badge').innerHTML = t('photo_verified');
+      document.getElementById('su-btn').textContent = t('create_btn');
+      document.getElementById('su-have-account').textContent = t('have_account');
+      document.getElementById('su-signin-link').textContent = t('nav_signin');
+      // Tabs
+      document.getElementById('tab-signin').textContent = t('nav_signin');
+      document.getElementById('tab-signup').textContent = t('create_account_title').split(' ')[0] + ' ' + t('create_account_title').split(' ').slice(-1)[0];
+    }
+
+    applyLang();
+
+    let selectedRole = 'seeker';
+    let selectedGender = 'male';
+    let capturedPhotoData = null;
+    let cameraStream = null;
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => {
+        t.classList.toggle('active', (tab === 'signin' && i === 0) || (tab === 'signup' && i === 1));
+      });
+      document.getElementById('signin-form').classList.toggle('active', tab === 'signin');
+      document.getElementById('signup-form').classList.toggle('active', tab === 'signup');
+    }
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('role-seeker').classList.toggle('selected', role === 'seeker');
+      document.getElementById('role-helper').classList.toggle('selected', role === 'helper');
+    }
+
+    function selectGender(gender) {
+      selectedGender = gender;
+      document.getElementById('gender-male').classList.toggle('selected', gender === 'male');
+      document.getElementById('gender-female').classList.toggle('selected', gender === 'female');
+      document.getElementById('gender-other').classList.toggle('selected', gender === 'other');
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 4500);
+    }
+
+    function triggerFileInput(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('photo-file-input').click();
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => setPhoto(ev.target.result);
+      reader.readAsDataURL(file);
+    }
+
+    function setPhoto(dataUrl) {
+      capturedPhotoData = dataUrl;
+      document.getElementById('photo-preview-img').src = dataUrl;
+      document.getElementById('photo-preview-wrap').style.display = 'block';
+      document.getElementById('photo-placeholder').style.display = 'none';
+      document.getElementById('photo-btns').style.display = 'none';
+      document.getElementById('photo-zone').classList.add('has-photo');
+      document.getElementById('photo-zone').onclick = null;
+      document.getElementById('photo-verified-badge').style.display = 'inline-flex';
+    }
+
+    function removePhoto(e) {
+      e.stopPropagation();
+      capturedPhotoData = null;
+      document.getElementById('photo-preview-img').src = '';
+      document.getElementById('photo-preview-wrap').style.display = 'none';
+      document.getElementById('photo-placeholder').style.display = 'block';
+      document.getElementById('photo-btns').style.display = 'flex';
+      document.getElementById('photo-zone').classList.remove('has-photo');
+      document.getElementById('photo-zone').onclick = () => triggerFileInput();
+      document.getElementById('photo-verified-badge').style.display = 'none';
+      document.getElementById('photo-file-input').value = '';
+    }
+
+    async function openCamera(e) {
+      e.stopPropagation();
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        document.getElementById('camera-video').srcObject = cameraStream;
+        document.getElementById('camera-modal').classList.add('active');
+      } catch (err) {
+        alert('Camera not available. Please upload a photo instead.');
+      }
+    }
+
+    function snapPhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setPhoto(dataUrl);
+      closeCamera();
+    }
+
+    function closeCamera() {
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      document.getElementById('camera-modal').classList.remove('active');
+    }
+
+    let currentSignInMethod = 'email';
+
+    function setSignInMethod(method) {
+      currentSignInMethod = method;
+      document.getElementById('si-method-email').style.background = method === 'email' ? 'var(--blue)' : 'transparent';
+      document.getElementById('si-method-email').style.color = method === 'email' ? '#fff' : 'var(--text)';
+      document.getElementById('si-method-phone').style.background = method === 'phone' ? 'var(--blue)' : 'transparent';
+      document.getElementById('si-method-phone').style.color = method === 'phone' ? '#fff' : 'var(--text)';
+
+      document.getElementById('si-email-section').style.display = method === 'email' ? 'block' : 'none';
+      document.getElementById('si-phone-section').style.display = method === 'phone' ? 'block' : 'none';
+      document.getElementById('signin-error').style.display = 'none';
+    }
+
+    function sendOTP(e) {
+      if (e) e.preventDefault();
+      const phone = document.getElementById('signin-phone').value.trim();
+      if (!phone || phone.length < 10) return showError('signin-error', 'Enter a valid 10-digit mobile number.');
+      document.getElementById('si-otp-group').style.display = 'block';
+      document.getElementById('btn-send-otp').textContent = 'Resend';
+      alert('Mock OTP sent to ' + phone + '.\\nEntering 1234 automatically for demo purposes.');
+      document.getElementById('signin-otp').value = '1234';
+    }
+
+    function handleSignin() {
+      if (currentSignInMethod === 'email') {
+        const email = document.getElementById('signin-email').value.trim();
+        const password = document.getElementById('signin-password').value;
+        if (!email || !password) return showError('signin-error', 'Please fill in all fields.');
+        const user = Users.findByEmail(email);
+        if (!user || user.password !== password) return showError('signin-error', 'Invalid email or password.');
+        Auth.setUser(user);
+        window.location.href = 'dashboard.html';
+      } else {
+        const phone = document.getElementById('signin-phone').value.trim();
+        const otp = document.getElementById('signin-otp').value.trim();
+        if (!phone || !otp) return showError('signin-error', 'Please enter mobile number and OTP.');
+        if (otp !== '1234') return showError('signin-error', 'Invalid OTP. Use 1234 for demo.');
+        const user = Users.findByPhone(phone);
+        if (!user) return showError('signin-error', 'No account found for this mobile number.');
+        Auth.setUser(user);
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function handleSignup() {
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const phone = document.getElementById('signup-phone').value.trim();
+      const idNum = document.getElementById('signup-id').value.trim();
+      const password = document.getElementById('signup-password').value;
+      if (!name || !email || !phone || !idNum || !password) return showError('signup-error', 'Please fill in all fields.');
+      if (password.length < 6) return showError('signup-error', 'Password must be at least 6 characters.');
+      if (!capturedPhotoData) return showError('signup-error', 'Please add a verification photo to continue.');
+      if (Users.findByEmail(email)) return showError('signup-error', 'An account with this email already exists.');
+      if (Users.findByPhone(phone)) return showError('signup-error', 'An account with this mobile number already exists.');
+      const user = Users.add({ name, email, phone, idNumber: idNum, password, role: selectedRole, gender: selectedGender, photo: capturedPhotoData });
+      Auth.setUser(user);
+      window.location.href = 'dashboard.html';
+    }
+
+    // for light dark theme
+    /* ADD THIS */
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    // Sync with saved preference or system settings
+    const savedTheme = localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    const dt = document.documentElement.getAttribute('data-theme') || savedTheme;
+    themeIcon.textContent = dt === 'dark' ? '' : '';
+  </script>
+</body>
+
+</html>

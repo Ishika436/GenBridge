@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – GenBridge</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+
+    .profile-card {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      border-radius: var(--radius);
+      padding: 1.8rem 1.5rem;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(47,128,237,0.3);
+    }
+
+    .profile-avatar-lg {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 700;
+      margin: 0 auto 1rem;
+      border: 3px solid rgba(255,255,255,0.4);
+    }
+
+    .profile-card h3 { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+    .profile-card p { font-size: 0.83rem; opacity: 0.8; margin-bottom: 1rem; }
+
+    .role-tag { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 50px; padding: 4px 14px; font-size: 0.8rem; font-weight: 600; }
+
+    .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+    .stat-card { background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; text-align: center; box-shadow: var(--shadow); }
+    .stat-card .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--blue); font-family: 'Playfair Display', serif; }
+    .stat-card .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+
+    .quick-actions { background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow); }
+    .quick-actions h4 { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.8rem; }
+
+    .qa-btn { display: flex; align-items: center; gap: 10px; padding: 0.7rem 0.8rem; border-radius: 10px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 500; color: var(--text); transition: background 0.15s; }
+    .qa-btn:hover { background: var(--blue-light); color: var(--blue); }
+
+    .main-content { display: flex; flex-direction: column; gap: 1.8rem; }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-header h2 { font-size: 1.3rem; }
+
+    .empty-state { text-align: center; padding: 3rem; background: var(--card-bg, #fff); border: 2px dashed var(--border); border-radius: var(--radius); }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { color: var(--text-muted); margin-bottom: 1.2rem; }
+
+    .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+
+    .welcome-banner { background: linear-gradient(135deg, #eaf4ff 0%, #e8f7ee 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem 1.8rem; display: flex; align-items: center; gap: 1.5rem; }
+    .welcome-banner .w-icon { font-size: 2.8rem; }
+    .welcome-banner h2 { font-size: 1.3rem; margin-bottom: 0.25rem; }
+    .welcome-banner p { color: var(--text-muted); font-size: 0.92rem; }
+
+    /* Gender badge in profile */
+    .gender-display {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      margin-left: 4px;
+    }
+
+    /* ===== HELPER PROFILE SELECTOR ===== */
+    .helper-selector-card {
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      box-shadow: var(--shadow);
+    }
+    .helper-selector-card h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.9rem;
+    }
+    .helper-profiles-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-height: 280px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .helper-profile-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6rem 0.7rem;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .helper-profile-row:hover { border-color: var(--blue); background: var(--blue-light); }
+    .helper-profile-row.selected { border-color: var(--blue); background: var(--blue-light); }
+    .helper-avatar-sm {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; font-weight: 700;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .helper-info { flex: 1; min-width: 0; }
+    .helper-info .h-name { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .helper-info .h-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 1px; }
+    .helper-info .h-rating { color: #f59e0b; font-weight: 600; font-size: 0.75rem; }
+    .helper-check { color: var(--blue); font-size: 1rem; display: none; }
+    .helper-profile-row.selected .helper-check { display: block; }
+    .helper-any-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0.55rem 0.7rem;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      width: 100%;
+      transition: all 0.18s;
+    }
+    .helper-any-btn:hover, .helper-any-btn.selected { border-color: var(--green, #22c55e); background: #f0fdf4; color: #16a34a; }
+    .helper-any-btn.selected { background: #f0fdf4; }
+    .selected-helper-banner {
+      display: none;
+      background: linear-gradient(135deg, #eaf4ff 0%, #e0f2fe 100%);
+      border: 1.5px solid var(--blue);
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      margin-top: 0.7rem;
+      font-size: 0.82rem;
+      color: var(--blue-dark);
+      font-weight: 600;
+      align-items: center;
+      gap: 8px;
+    }
+    [data-theme="dark"] .selected-helper-banner {
+      background: rgba(47,128,237,0.12);
+      color: var(--blue);
+    }
+
+    /* ===== LOCATION RADIUS FILTER ===== */
+    .location-filter-card {
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      box-shadow: var(--shadow);
+    }
+    .location-filter-card h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.9rem;
+    }
+    .radius-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .radius-chip {
+      padding: 5px 14px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.18s;
+    }
+    .radius-chip:hover { border-color: var(--blue); color: var(--blue); }
+    .radius-chip.selected { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+    .gps-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; }
+    .gps-dot.active { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+    .gps-btn-sm {
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--blue);
+      background: var(--blue-light);
+      transition: all 0.18s;
+      width: 100%;
+      margin-top: 0.6rem;
+    }
+    .gps-btn-sm:hover { background: var(--blue); color: #fff; }
+
+    @media (max-width: 860px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .sidebar { display: grid; grid-template-columns: 1fr 1fr; }
+      .task-grid { grid-template-columns: 1fr; }
+    }
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .quick-actions,
+    [data-theme="dark"] .empty-state {
+      background: var(--card-bg);
+    }
+    [data-theme="dark"] .welcome-banner {
+      background: var(--card-bg);
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="container">
+    <div class="dashboard-grid">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="profile-card fade-in fade-in-1">
+          <div class="profile-avatar-lg" id="sidebar-avatar"></div>
+          <h3 id="sidebar-name">Loading…</h3>
+          <p id="sidebar-email">—</p>
+          <span class="role-tag" id="sidebar-role">—</span>
+          <span id="sidebar-gender" style="display:none;" class="gender-display"></span>
+        </div>
+
+        <div class="stat-cards fade-in fade-in-2">
+          <div class="stat-card">
+            <div class="stat-num" id="stat-posted">0</div>
+            <div class="stat-label" id="stat-posted-label">Tasks Posted</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-done">0</div>
+            <div class="stat-label" id="stat-done-label">Completed</div>
+          </div>
+        </div>
+
+        <div class="quick-actions card fade-in fade-in-3">
+          <h4 id="qa-heading">Quick Actions</h4>
+          <div id="quick-actions-list"></div>
+        </div>
+
+        <!-- HELPER PROFILE SELECTOR (seeker only) -->
+        <div class="helper-selector-card fade-in fade-in-4" id="helper-selector-panel" style="display:none;">
+          <h4>&#128100; Choose a Helper</h4>
+          <div class="helper-profiles-scroll" id="helper-profiles-list"></div>
+          <div class="selected-helper-banner" id="selected-helper-banner">
+            <span>&#10003;</span>
+            <span id="selected-helper-text">Any available helper</span>
+          </div>
+        </div>
+
+        <!-- LOCATION RADIUS FILTER (seeker only) -->
+        <div class="location-filter-card fade-in fade-in-4" id="location-filter-panel" style="display:none;">
+          <h4>&#128205; Helper's Location</h4>
+          <div class="radius-options" id="radius-options">
+            <button class="radius-chip selected" data-km="2" onclick="selectRadius(this)">Within 2 km</button>
+            <button class="radius-chip" data-km="5" onclick="selectRadius(this)">Within 5 km</button>
+            <button class="radius-chip" data-km="10" onclick="selectRadius(this)">Within 10 km</button>
+            <button class="radius-chip" data-km="any" onclick="selectRadius(this)">Anywhere</button>
+          </div>
+          <div class="gps-status">
+            <span class="gps-dot" id="gps-dot"></span>
+            <span id="gps-status-text">Location not set</span>
+          </div>
+          <button class="gps-btn-sm" onclick="enableGPSFilter(this)" id="gps-filter-btn">
+            &#128205; Use My Location
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main-content">
+        <div class="welcome-banner fade-in fade-in-1">
+          <div class="w-icon" id="welcome-icon"></div>
+          <div>
+            <h2 id="welcome-msg">Welcome back!</h2>
+            <p id="welcome-sub">Here's what's happening on GenBridge today.</p>
+          </div>
+        </div>
+
+        <section class="fade-in fade-in-2">
+          <div class="section-header">
+            <h2 id="recent-section-title">Recent Tasks</h2>
+            <a href="#" id="view-all-link" class="btn btn-outline" style="padding:0.45rem 1rem;font-size:0.85rem;" id="view-all-btn">View All</a>
+          </div>
+          <div id="tasks-container"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const user = Auth.requireAuth();
+    if (!user) throw new Error('No user');
+    seedDemoTasks();
+
+    document.getElementById('navbar-mount').innerHTML = renderNavbar('dashboard');
+
+    // Sidebar avatar
+    const initials = user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const avatarEl = document.getElementById('sidebar-avatar');
+    if (user.photo) {
+      avatarEl.innerHTML = `<img src="${user.photo}" alt="${initials}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.5);"/>`;
+      avatarEl.style.background = 'transparent';
+    } else {
+      avatarEl.textContent = initials;
+    }
+    document.getElementById('sidebar-name').textContent = user.name;
+    document.getElementById('sidebar-email').textContent = user.email;
+    document.getElementById('sidebar-role').textContent = user.role === 'seeker' ? t('seeking_help') : t('helper_label');
+
+    // Gender display
+    if (user.gender) {
+      const gEl = document.getElementById('sidebar-gender');
+      const gIcon = user.gender === 'male' ? '' : user.gender === 'female' ? '' : '';
+      const gName = user.gender === 'male' ? t('gender_male') : user.gender === 'female' ? t('gender_female') : t('gender_other');
+      gEl.innerHTML = `${gIcon} ${gName}`;
+      gEl.style.display = 'inline-flex';
+    }
+
+    // Stats
+    const allTasks = Tasks.getAll();
+    if (user.role === 'seeker') {
+      const myTasks = Tasks.getByUser(user.id);
+      document.getElementById('stat-posted').textContent = myTasks.length;
+      document.getElementById('stat-done').textContent = myTasks.filter(t => t.status === 'completed').length;
+      document.getElementById('stat-posted-label').textContent = t('tasks_posted');
+      document.getElementById('stat-done-label').textContent = t('completed');
+    } else {
+      const myHelps = allTasks.filter(t => t.acceptedById === user.id);
+      document.getElementById('stat-posted').textContent = myHelps.length;
+      document.getElementById('stat-done').textContent = myHelps.filter(t => t.status === 'completed').length;
+      document.getElementById('stat-posted-label').textContent = t('helps_taken');
+      document.getElementById('stat-done-label').textContent = t('completed');
+    }
+
+    // Quick actions label
+    document.getElementById('qa-heading').textContent = t('quick_actions');
+
+    // Welcome message
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? t('good_morning') : hour < 17 ? t('good_afternoon') : t('good_evening');
+    document.getElementById('welcome-msg').textContent = `${greeting}, ${user.name.split(' ')[0]}! `;
+    document.getElementById('welcome-icon').innerHTML = avatarHTML(user.name, user.photo, 64, '1.8rem');
+    document.getElementById('welcome-sub').textContent = user.role === 'seeker' ? t('seeker_welcome_sub') : t('helper_welcome_sub');
+
+    // Quick Actions
+    const qaList = document.getElementById('quick-actions-list');
+    if (user.role === 'seeker') {
+      qaList.innerHTML = `
+        <button class="qa-btn" onclick="window.location.href='post-task.html'">${t('qa_post')}</button>
+        <button class="qa-btn" onclick="window.location.href='my-tasks.html'">${t('qa_my_tasks')}</button>
+        <button class="qa-btn" onclick="window.location.href='tasks-nearby.html'">${t('qa_browse')}</button>
+      `;
+      document.getElementById('recent-section-title').textContent = t('recent_tasks');
+      document.getElementById('view-all-link').href = 'my-tasks.html';
+    } else {
+      qaList.innerHTML = `
+        <button class="qa-btn" onclick="window.location.href='tasks-nearby.html'">${t('qa_nearby')}</button>
+        <button class="qa-btn" onclick="window.location.href='my-tasks.html'">${t('qa_helps')}</button>
+      `;
+      document.getElementById('recent-section-title').textContent = t('latest_tasks');
+      document.getElementById('view-all-link').href = 'tasks-nearby.html';
+    }
+    document.getElementById('view-all-link').textContent = t('view_all');
+
+    // Tasks
+    const container = document.getElementById('tasks-container');
+    const displayTasks = user.role === 'seeker'
+      ? Tasks.getByUser(user.id).slice(0, 4)
+      : allTasks.filter(t => t.status === 'open').slice(0, 4);
+
+    // ===== SEEKER PANELS: Helper Selector + Location Filter =====
+    if (user.role === 'seeker') {
+      document.getElementById('helper-selector-panel').style.display = 'block';
+      document.getElementById('location-filter-panel').style.display = 'block';
+
+      // Demo helper profiles (young generation helpers)
+      const demoHelpers = [
+        { id: 'h1', name: 'Aryan Sharma', age: 22, skills: ['Tech Help', 'Shopping'], rating: 4.9, reviews: 31, dist: '1.2 km', color: '#3b82f6' },
+        { id: 'h2', name: 'Priya Desai', age: 20, skills: ['Errands', 'Companion'], rating: 4.8, reviews: 24, dist: '0.8 km', color: '#8b5cf6' },
+        { id: 'h3', name: 'Rohan Mehta', age: 24, skills: ['Household', 'Medical'], rating: 4.7, reviews: 18, dist: '1.9 km', color: '#10b981' },
+        { id: 'h4', name: 'Sneha Patil', age: 21, skills: ['Shopping', 'Companion'], rating: 4.9, reviews: 42, dist: '2.4 km', color: '#f59e0b' },
+        { id: 'h5', name: 'Karan Nair', age: 23, skills: ['Tech Help', 'Errands'], rating: 4.6, reviews: 15, dist: '3.1 km', color: '#ef4444' },
+      ];
+
+      let selectedHelperId = null;
+
+      function renderHelpers() {
+        const list = document.getElementById('helper-profiles-list');
+        list.innerHTML = `
+          <button class="helper-any-btn ${!selectedHelperId ? 'selected' : ''}" onclick="pickHelper(null)">
+            <span style="font-size:1.1rem;">&#127758;</span> Any Available Helper
+          </button>
+        ` + demoHelpers.map(h => {
+          const initials = h.name.split(' ').map(n=>n[0]).join('');
+          const stars = '★'.repeat(Math.round(h.rating)) + '☆'.repeat(5-Math.round(h.rating));
+          return `
+          <div class="helper-profile-row ${selectedHelperId === h.id ? 'selected' : ''}" onclick="pickHelper('${h.id}')">
+            <div class="helper-avatar-sm" style="background:${h.color};">${initials}</div>
+            <div class="helper-info">
+              <div class="h-name">${h.name} <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">(${h.age} yrs)</span></div>
+              <div class="h-meta">
+                <span class="h-rating">${stars} ${h.rating}</span>
+                <span>${h.reviews} reviews</span>
+                <span>&#128205; ${h.dist}</span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${h.skills.join(' · ')}</div>
+            </div>
+            <span class="helper-check">&#10003;</span>
+          </div>`;
+        }).join('');
+      }
+
+      window.pickHelper = function(id) {
+        selectedHelperId = id;
+        renderHelpers();
+        const banner = document.getElementById('selected-helper-banner');
+        const bannerText = document.getElementById('selected-helper-text');
+        if (id) {
+          const h = demoHelpers.find(x => x.id === id);
+          bannerText.textContent = h.name + ' selected for your next task';
+          banner.style.display = 'flex';
+          // Store preference
+          try { localStorage.setItem('gb_preferred_helper', JSON.stringify(h)); } catch(e){}
+        } else {
+          bannerText.textContent = 'Any available helper';
+          banner.style.display = 'flex';
+          try { localStorage.removeItem('gb_preferred_helper'); } catch(e){}
+        }
+      };
+
+      renderHelpers();
+
+      // Restore saved preference
+      try {
+        const saved = localStorage.getItem('gb_preferred_helper');
+        if (saved) {
+          const sh = JSON.parse(saved);
+          if (demoHelpers.find(h => h.id === sh.id)) { selectedHelperId = sh.id; renderHelpers(); }
+        }
+      } catch(e){}
+    }
+
+    // ===== LOCATION RADIUS FILTER =====
+    let selectedRadius = 2;
+    let userLat = null, userLng = null;
+
+    window.selectRadius = function(btn) {
+      document.querySelectorAll('.radius-chip').forEach(c => c.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedRadius = btn.dataset.km === 'any' ? 'any' : Number(btn.dataset.km);
+      try { localStorage.setItem('gb_radius_filter', btn.dataset.km); } catch(e){}
+      updateRadiusStatus();
+    };
+
+    function updateRadiusStatus() {
+      const dot = document.getElementById('gps-dot');
+      const txt = document.getElementById('gps-status-text');
+      if (userLat && userLng) {
+        dot.classList.add('active');
+        txt.textContent = selectedRadius === 'any'
+          ? 'Showing helpers from anywhere'
+          : `Showing helpers within ${selectedRadius} km of you`;
+      } else {
+        dot.classList.remove('active');
+        txt.textContent = 'Enable location to filter by distance';
+      }
+    }
+
+    window.enableGPSFilter = function(btn) {
+      if (!navigator.geolocation) { alert('Geolocation not supported in this browser.'); return; }
+      btn.textContent = 'Locating…';
+      btn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          btn.textContent = '&#10003; Location Active';
+          btn.style.background = 'var(--green, #22c55e)';
+          btn.style.color = '#fff';
+          try { localStorage.setItem('gb_user_lat', userLat); localStorage.setItem('gb_user_lng', userLng); } catch(e){}
+          updateRadiusStatus();
+        },
+        () => { btn.textContent = 'Failed. Try again.'; btn.disabled = false; }
+      );
+    };
+
+    // Restore saved radius
+    try {
+      const savedRadius = localStorage.getItem('gb_radius_filter');
+      if (savedRadius) {
+        const chip = document.querySelector(`.radius-chip[data-km="${savedRadius}"]`);
+        if (chip) { document.querySelectorAll('.radius-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); selectedRadius = savedRadius === 'any' ? 'any' : Number(savedRadius); }
+      }
+      userLat = parseFloat(localStorage.getItem('gb_user_lat')) || null;
+      userLng = parseFloat(localStorage.getItem('gb_user_lng')) || null;
+    } catch(e){}
+    updateRadiusStatus();
+    // ===== END PANELS =====
+
+    if (displayTasks.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">${user.role === 'seeker' ? '' : '🔍'}</div>
+          <p>${user.role === 'seeker' ? 'You haven\'t posted any tasks yet.' : 'No open tasks available right now.'}</p>
+          ${user.role === 'seeker' ? '<a href="post-task.html" class="btn btn-primary">Post Your First Task</a>' : ''}
+        </div>`;
+    } else {
+      const statusColors = { open: 'badge-blue', accepted: 'badge-orange', completed: 'badge-green' };
+      container.innerHTML = `<div class="task-grid">` + displayTasks.map(t => `
+        <div class="task-card fade-in">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+            <span class="badge badge-blue">${t.category || 'General'}</span>
+            <span class="badge ${statusColors[t.status] || 'badge-blue'}">${t.status}</span>
+          </div>
+          <h3 class="translate-text">${t.title}</h3>
+          <p class="translate-text" data-max-length="80" data-full-text="${(t.description||'').replace(/"/g, '&quot;')}" style="font-size:0.85rem;color:var(--text-muted);margin:0.4rem 0 0.7rem;">${t.description?.slice(0,80)}…</p>
+          <div class="task-meta">
+            <span>${t.lat && t.lng ? `<a href="https://www.google.com/maps?q=${t.lat},${t.lng}" target="_blank" title="View Map" style="color:var(--blue);text-decoration:none;font-weight:600;">📍 ${t.location}</a>` : t.location}</span>
+            <span>${t.pay}</span>
+            <span>👤 ${t.postedBy}</span>
+          </div>
+          ${t.urgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
+        </div>
+      `).join('') + `</div>`;
+    }
+  </script>
+</body>
+</html>
